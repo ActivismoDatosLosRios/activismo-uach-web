@@ -19,6 +19,7 @@ import {
   Badge,
   Box,
   Button,
+  Divider,
   Flex,
   Heading,
   Image,
@@ -33,6 +34,7 @@ import {
 import {
   GET_FORMS,
   GET_QUESTIONS,
+  TOGGLE_ACTIVE_FORM,
   UPSERT_FORM,
   UPSERT_QUESTION,
 } from "../../graphql/queries";
@@ -87,13 +89,33 @@ export default () => {
     },
   });
 
+  const [toggleFormName, setToggleFormName] = useRememberState(
+    "toggle_form_id",
+    ""
+  );
+
+  const [
+    toggleFormActive,
+    { error: errorToggleFormActive, loading: loadingToggleFormActive },
+  ] = useMutation(TOGGLE_ACTIVE_FORM, {
+    variables: {
+      form_name: toggleFormName,
+    },
+    context: {
+      headers: {
+        authorization,
+      },
+    },
+  });
+
   useEffect(() => {
-    if (errorUpsertForm || errorUpsertQuestion) {
+    if (errorUpsertForm || errorUpsertQuestion || errorToggleFormActive) {
       console.log(
         JSON.stringify(
           {
             errorUpsertForm,
             errorUpsertQuestion,
+            errorToggleFormActive,
           },
           null,
           2
@@ -104,19 +126,29 @@ export default () => {
 
   return (
     <Stack spacing="20px">
-      {(errorUpsertForm || errorUpsertQuestion) && (
-        <>
-          <h3>Error!</h3>
-          <ul>
-            {[
-              ...(errorUpsertForm?.graphQLErrors ?? []),
-              ...(errorUpsertQuestion?.graphQLErrors ?? []),
-            ].map(({ message }, key) => (
-              <p key={key}>{message}</p>
-            ))}
-          </ul>
-        </>
-      )}
+      {(errorUpsertForm || errorUpsertQuestion || errorToggleFormActive) &&
+        (() => {
+          const message =
+            errorUpsertForm?.message ??
+            errorUpsertQuestion?.message ??
+            errorToggleFormActive?.message;
+
+          return (
+            <>
+              <h3>Error!</h3>
+              <p>{message}</p>
+              <ul>
+                {[
+                  ...(errorUpsertForm?.graphQLErrors ?? []),
+                  ...(errorUpsertQuestion?.graphQLErrors ?? []),
+                  ...(errorToggleFormActive?.graphQLErrors ?? []),
+                ].map(({ message }, key) => {
+                  return <p key={key}>{message}</p>;
+                })}
+              </ul>
+            </>
+          );
+        })()}
       <InputGroup size="sm" borderColor="gray.400" alignItems="center">
         <InputLeftAddon rounded="md" size="md">
           <Text>Authorization Token</Text>
@@ -141,6 +173,10 @@ export default () => {
             <Flex alignItems="center">
               <Badge variantColor="yellow">Form</Badge>
               <Tag variantColor="blue">{form.name}</Tag>
+              <Tag variantColor="orange">{form._id}</Tag>
+              <Tag variantColor={form.active ? "blue" : "red"}>
+                {form.active ? "active" : "inactive"}
+              </Tag>
             </Flex>
             <Formik<Record<string, IFormQuestions>>
               initialValues={{
@@ -155,10 +191,8 @@ export default () => {
               }}
               enableReinitialize
               onSubmit={async ({ name, ...questions }) => {
-                console.log({ questions, name });
                 await Promise.all(
                   map(questions, async ({ text, alternatives }, _id) => {
-                    console.log({ text, alternatives, _id });
                     const alternativesUpsert = compact(
                       map(alternatives?.split("|"), v => v.trim())
                     );
@@ -176,11 +210,7 @@ export default () => {
                     });
                   })
                 );
-                console.log({ name });
-                console.log({
-                  asd: name.text,
-                  questions: Object.keys(questions),
-                });
+
                 await upsertForm({
                   variables: {
                     data: {
@@ -354,6 +384,32 @@ export default () => {
           </>
         );
       })()}
+      <Divider />
+      <Box>
+        <InputGroup>
+          <InputLeftAddon rounded="md" size="md">
+            <Text>Toggle Active Form name (hide or show)</Text>
+          </InputLeftAddon>
+          <Input
+            borderColor="black"
+            value={toggleFormName}
+            onChange={({
+              target: { value },
+            }: ChangeEvent<HTMLInputElement>) => {
+              setToggleFormName(value);
+            }}
+          />
+        </InputGroup>
+        <Button
+          isDisabled={!toggleFormName || loadingToggleFormActive}
+          onClick={async () => {
+            await toggleFormActive();
+            refetchGetForms();
+          }}
+        >
+          Toggle Active Form
+        </Button>
+      </Box>
     </Stack>
   );
 };

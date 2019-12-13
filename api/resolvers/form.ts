@@ -55,7 +55,9 @@ export class FormResolver {
   @Mutation(() => Form)
   async toggleActiveForm(
     @Ctx() { req }: IContext,
-    @Arg("form_id", () => ObjectIdScalar) form_id: string
+    @Arg("form_id", () => ObjectIdScalar, { nullable: true }) form_id?: string,
+    @Arg("form_name", { nullable: true })
+    form_name?: string
   ) {
     assert(
       req.headers.authorization === UPDATE_FORM_CREDENTIALS,
@@ -63,7 +65,10 @@ export class FormResolver {
         message: "Not authorized!",
       })
     );
-    const formToToggle = await FormModel.findById(form_id);
+    const formToToggle = await (form_id
+      ? FormModel.findById(form_id)
+      : FormModel.findOne({ name: form_name }));
+
     assertIsDefined(formToToggle, `Form specified not found!`);
     formToToggle.active = !formToToggle.active;
     await formToToggle.save();

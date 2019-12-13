@@ -155,10 +155,11 @@ export const GET_FORMS: DocumentNode<{
     }[];
     updatedAt: Date;
     createdAt: Date;
+    active: boolean;
   }[];
 }> = gql`
   query {
-    forms {
+    forms(show_inactive: true) {
       _id
       name
       questions {
@@ -170,6 +171,7 @@ export const GET_FORMS: DocumentNode<{
       }
       updatedAt
       createdAt
+      active
     }
   }
 `;
@@ -194,6 +196,23 @@ export const ANSWER_FORM: DocumentNode<
 > = gql`
   mutation($data: FormResultInput!) {
     answerForm(data: $data) {
+      _id
+    }
+  }
+`;
+
+export const TOGGLE_ACTIVE_FORM: DocumentNode<
+  {
+    toggleActiveForm: {
+      _id: string;
+    };
+  },
+  {
+    form_name: string;
+  }
+> = gql`
+  mutation($form_name: String) {
+    toggleActiveForm(form_name: $form_name) {
       _id
     }
   }

@@ -60,7 +60,7 @@ input FormResultInput {
 
 type Mutation {
   uploadChart(oldTitle: String, data: ChartUpload!, file: Upload!): Chart!
-  toggleActiveForm(form_id: ObjectId!): Form!
+  toggleActiveForm(form_name: String, form_id: ObjectId): Form!
   upsertForm(data: UpsertForm!): Form!
   answerForm(data: FormResultInput!): FormResult!
   upsertQuestion(data: UpsertQuestion!): Question!
