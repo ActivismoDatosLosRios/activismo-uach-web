@@ -7,10 +7,12 @@ import { useMutation, useQuery } from "@apollo/react-hooks";
 import {
   Box,
   Button,
+  IconButton,
   Image,
   Input,
   InputGroup,
   InputLeftAddon,
+  InputRightElement,
   Stack,
   Text,
 } from "@chakra-ui/core";
@@ -49,6 +51,16 @@ export default () => {
     }
   }, [allTags, setTagOptions]);
 
+  const [hideAuthorization, setHideAuthorization] = useState(true);
+
+  useEffect(() => {
+    if (!hideAuthorization) {
+      setTimeout(() => {
+        setHideAuthorization(true);
+      }, 2000);
+    }
+  }, [hideAuthorization, setHideAuthorization]);
+
   return (
     <Stack spacing="20px">
       {error && (
@@ -71,11 +83,22 @@ export default () => {
           rounded="md"
           placeholder="token"
           isRequired
+          type={hideAuthorization ? "password" : "text"}
           value={authorization}
           onChange={({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
             setAuthorization(value);
           }}
         />
+        <InputRightElement>
+          <IconButton
+            cursor="pointer"
+            aria-label="show-authorization"
+            icon={hideAuthorization ? "view" : "view-off"}
+            onClick={() => {
+              setHideAuthorization(hide => !hide);
+            }}
+          />
+        </InputRightElement>
       </InputGroup>
       <InputGroup size="sm" borderColor="gray.400" alignItems="center">
         <InputLeftAddon rounded="md" size="md">

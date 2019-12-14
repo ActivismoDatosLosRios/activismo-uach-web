@@ -22,10 +22,12 @@ import {
   Divider,
   Flex,
   Heading,
+  IconButton,
   Image,
   Input,
   InputGroup,
   InputLeftAddon,
+  InputRightElement,
   Stack,
   Tag,
   Text,
@@ -88,6 +90,16 @@ export default () => {
       },
     },
   });
+
+  const [hideAuthorization, setHideAuthorization] = useState(true);
+
+  useEffect(() => {
+    if (!hideAuthorization) {
+      setTimeout(() => {
+        setHideAuthorization(true);
+      }, 2000);
+    }
+  }, [hideAuthorization, setHideAuthorization]);
 
   const [toggleFormName, setToggleFormName] = useRememberState(
     "toggle_form_id",
@@ -160,10 +172,21 @@ export default () => {
           placeholder="token"
           isRequired
           value={authorization}
+          type={hideAuthorization ? "password" : "text"}
           onChange={({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
             setAuthorization(value);
           }}
         />
+        <InputRightElement>
+          <IconButton
+            cursor="pointer"
+            aria-label="show-authorization"
+            icon={hideAuthorization ? "view" : "view-off"}
+            onClick={() => {
+              setHideAuthorization(hide => !hide);
+            }}
+          />
+        </InputRightElement>
       </InputGroup>
       <Heading>Update Forms</Heading>
       {allForms?.forms.map(form => {
